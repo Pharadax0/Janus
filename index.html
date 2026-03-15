@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Horario Derecho 5° Ciclo</title>
+
+<style>
+
+body{
+font-family:Arial,Helvetica,sans-serif;
+background:#f3f4f6;
+margin:0;
+padding:30px;
+}
+
+h1{
+text-align:center;
+margin-bottom:25px;
+}
+
+.container{
+display:grid;
+grid-template-columns:300px 1fr;
+gap:30px;
+max-width:1400px;
+margin:auto;
+}
+
+.panel{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 8px 20px rgba(0,0,0,0.08);
+}
+
+select{
+width:100%;
+padding:8px;
+margin-bottom:12px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:13px;
+}
+
+button{
+width:100%;
+padding:10px;
+background:#111827;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:black;
+}
+
+.error{
+color:#dc2626;
+font-weight:bold;
+margin-top:10px;
+}
+
+.scheduler{
+background:white;
+border-radius:12px;
+box-shadow:0 8px 20px rgba(0,0,0,0.08);
+padding:15px;
+}
+
+.header{
+display:grid;
+grid-template-columns:60px repeat(6,1fr);
+font-weight:bold;
+margin-bottom:4px;
+}
+
+.header div{
+text-align:center;
+}
+
+.calendar{
+display:grid;
+grid-template-columns:60px repeat(6,1fr);
+height:800px;
+border:1px solid #e5e7eb;
+border-radius:8px;
+overflow:hidden;
+}
+
+.hours{
+position:relative;
+border-right:1px solid #e5e7eb;
+background:white;
+}
+
+.hour{
+position:absolute;
+right:4px;
+font-size:11px;
+color:#6b7280;
+}
+
+.day{
+position:relative;
+border-right:1px solid #e5e7eb;
+}
+
+.grid-bg{
+background-image:repeating-linear-gradient(
+transparent,
+transparent 49px,
+#e5e7eb 50px
+);
+background-size:100% 50px;
+}
+
+.block{
+position:absolute;
+left:3%;
+width:94%;
+border-radius:8px;
+padding:6px;
+font-size:11px;
+box-shadow:0 4px 10px rgba(0,0,0,0.15);
+color:white;
+}
+
+.block:hover{
+transform:scale(1.02);
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Horario Derecho 5° Ciclo</h1>
+
+<div class="container">
+
+<div class="panel">
+
+<h3>Seleccionar Secciones</h3>
+
+<div id="selectors"></div>
+
+<button onclick="clearAll()">Limpiar Todo</button>
+
+<div id="error" class="error"></div>
+
+</div>
+
+<div class="scheduler">
+
+<div class="header">
+<div>Hora</div>
+<div>Lunes</div>
+<div>Martes</div>
+<div>Miércoles</div>
+<div>Jueves</div>
+<div>Viernes</div>
+<div>Sábado</div>
+</div>
+
+<div class="calendar grid-bg">
+
+<div class="hours" id="hours"></div>
+
+<div class="day" data-day="1"></div>
+<div class="day" data-day="2"></div>
+<div class="day" data-day="3"></div>
+<div class="day" data-day="4"></div>
+<div class="day" data-day="5"></div>
+<div class="day" data-day="6"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const colors=[
+"#3b82f6",
+"#10b981",
+"#f59e0b",
+"#8b5cf6",
+"#ef4444",
+"#06b6d4",
+"#6366f1"
+]
+
+const courses=[
+
+{
+name:"Derechos Reales",
+sections:[
+{id:"Sec1 — Lama More — Jueves 6:00-8:15pm",day:4,start:18,end:20.25},
+{id:"Sec2 — Vigil Curo — Martes 6:00-8:15pm",day:2,start:18,end:20.25},
+{id:"Sec3 — Fort Ninamanco — Miércoles 3:00-5:15pm",day:3,start:15,end:17.25},
+{id:"Sec4 — Huerta Ayala — Viernes 7:00-9:15am",day:5,start:7,end:9.25},
+{id:"Sec5 — Varsi Rospigliosi — Lunes 3:00-5:15pm",day:1,start:15,end:17.25},
+{id:"Sec6 — Tapia Cornejo — Sábado 8:00-10:15am",day:6,start:8,end:10.25}
+]
+},
+
+{
+name:"Derecho Penal II",
+sections:[
+{id:"Sec1 — Robinson Gonzales Campos — Lunes 8:15-10:30pm",day:1,start:20.25,end:22.5},
+{id:"Sec2 — Robinson Gonzales Campos — Jueves 6:00-8:15pm",day:4,start:18,end:20.25},
+{id:"Sec3 — Salazar Sanchez — Viernes 7:30-9:45pm",day:5,start:19.5,end:21.75},
+{id:"Sec4 — Urquizo Olaechea — Martes 8:00-10:15pm",day:2,start:20,end:22.25},
+{id:"Sec5 — Prado Saldarriaga — Miércoles 6:00-8:15pm",day:3,start:18,end:20.25}
+]
+},
+
+{
+name:"Proceso de Conocimiento",
+sections:[
+{id:"Sec1 — Canelo Rabanal — Miércoles 3:00-6:00pm",day:3,start:15,end:18},
+{id:"Sec2 — Martinez Flores — Martes 8:00-11:00am",day:2,start:8,end:11},
+{id:"Sec3 — Abregu Baez — Lunes 11:00-2:00pm",day:1,start:11,end:14},
+{id:"Sec4 — Ariano Deho — Jueves 11:00-2:00pm",day:4,start:11,end:14},
+{id:"Sec5 — Jacobo Romero — Viernes 11:30-2:30pm",day:5,start:11.5,end:14.5},
+{id:"Sec6 — Camus Cubas — Miércoles 3:00-6:00pm",day:3,start:15,end:18},
+{id:"Sec7 — Canelo Rabanal — Jueves 3:00-6:00pm",day:4,start:15,end:18}
+]
+},
+
+{
+name:"Derecho Procesal Penal I",
+sections:[
+{id:"Sec1 — Tapia Caballin — Lunes 3:00-6:00pm",day:1,start:15,end:18},
+{id:"Sec2 — Mavila Leon — Martes 9:00-12:00pm",day:2,start:9,end:12},
+{id:"Sec3 — Cubas Villanueva — Miércoles 8:00-11:00am",day:3,start:8,end:11},
+{id:"Sec4 — Arbulu Martinez — Jueves 6:00-9:00pm",day:4,start:18,end:21},
+{id:"Sec5 — Tapia Caballin — Viernes 8:00-11:00am",day:5,start:8,end:11},
+{id:"Sec6 — Camarena Aliaga — Martes 7:00-10:00pm",day:2,start:19,end:22}
+]
+},
+
+{
+name:"Derecho Administrativo I",
+sections:[
+{id:"Sec1 — Gutierrez Tudela — Lunes 8:00-10:15am",day:1,start:8,end:10.25},
+{id:"Sec2 — Cuba Meneses — Miércoles 6:00-8:15pm",day:3,start:18,end:20.25},
+{id:"Sec3 — Rojas Leo — Jueves 5:30-7:45pm",day:4,start:17.5,end:19.75},
+{id:"Sec4 — Santy Cabrera — Martes 3:45-6:00pm",day:2,start:15.75,end:18},
+{id:"Sec5 — Estela Huaman — Viernes 6:00-8:15pm",day:5,start:18,end:20.25},
+{id:"Sec6 — Gutierrez Tudela — Miércoles 10:15-12:30pm",day:3,start:10.25,end:12.5},
+{id:"Sec7 — Retamozo Linares — Jueves 11:00-1:15pm",day:4,start:11,end:13.25}
+]
+},
+
+{
+name:"Derecho Mercantil II",
+sections:[
+{id:"Sec1 — Alva Lirio — Martes 9:15-11:30am",day:2,start:9.25,end:11.5},
+{id:"Sec2 — Cornejo Guerrero — Miércoles 10:15-12:30pm",day:3,start:10.25,end:12.5},
+{id:"Sec3 — Beaumont Callirgos — Lunes 11:00-1:15pm",day:1,start:11,end:13.25},
+{id:"Sec4 — Ramos Padilla — Viernes 8:00-10:15am",day:5,start:8,end:10.25},
+{id:"Sec5 — Ramos Padilla — Jueves 5:15-7:30pm",day:4,start:17.25,end:19.5},
+{id:"Sec6 — Guerra Cerrón — Martes 6:00-8:15pm",day:2,start:18,end:20.25}
+]
+},
+
+{
+name:"Finanzas Públicas",
+sections:[
+{id:"Sec1 — Figueroa Bustamante — Lunes 11:00-12:30pm",day:1,start:11,end:12.5},
+{id:"Sec2 — Martínez Ortiz — Miércoles 6:00-7:30pm",day:3,start:18,end:19.5},
+{id:"Sec3 — Figueroa Bustamante — Viernes 8:45-10:15am",day:5,start:8.75,end:10.25},
+{id:"Sec4 — Por Asignar — Sábado 9:30-11:00am",day:6,start:9.5,end:11},
+{id:"Sec5 — Figueroa Bustamante — Viernes 10:00-11:30am",day:5,start:10,end:11.5}
+]
+}
+
+]
+
+function overlaps(a,b){
+return a.day===b.day && a.start<b.end && b.start<a.end
+}
+
+const selectors=document.getElementById("selectors")
+const errorBox=document.getElementById("error")
+
+courses.forEach((c,i)=>{
+
+const sel=document.createElement("select")
+sel.dataset.course=i
+
+const def=document.createElement("option")
+def.textContent=c.name
+def.value=""
+sel.appendChild(def)
+
+c.sections.forEach((s,j)=>{
+
+const op=document.createElement("option")
+op.value=j
+op.textContent=s.id
+sel.appendChild(op)
+
+})
+
+sel.onchange=render
+selectors.appendChild(sel)
+
+})
+
+function render(){
+
+document.querySelectorAll(".block").forEach(b=>b.remove())
+errorBox.textContent=""
+
+let chosen=[]
+
+document.querySelectorAll("select").forEach(sel=>{
+if(sel.value!==""){
+const c=courses[sel.dataset.course]
+chosen.push(c.sections[sel.value])
+}
+})
+
+for(let i=0;i<chosen.length;i++){
+for(let j=i+1;j<chosen.length;j++){
+if(overlaps(chosen[i],chosen[j])){
+errorBox.textContent="⚠ Hay cruce de horario"
+return
+}
+}
+}
+
+chosen.forEach((c,i)=>{
+
+const block=document.createElement("div")
+block.className="block"
+block.style.background=colors[i%colors.length]
+
+const top=(c.start-7)*50
+const height=(c.end-c.start)*50
+
+block.style.top=top+"px"
+block.style.height=height+"px"
+
+block.innerHTML=`<b>${c.id}</b>`
+
+document.querySelector(`.day[data-day='${c.day}']`).appendChild(block)
+
+})
+
+}
+
+function clearAll(){
+
+document.querySelectorAll("select").forEach(s=>s.value="")
+document.querySelectorAll(".block").forEach(b=>b.remove())
+errorBox.textContent=""
+
+}
+
+const hours=document.getElementById("hours")
+
+for(let i=7;i<=22;i++){
+
+const h=document.createElement("div")
+h.className="hour"
+h.style.top=((i-7)*50)+"px"
+h.textContent=i+":00"
+
+hours.appendChild(h)
+
+}
+
+</script>
+
+</body>
+</html>
